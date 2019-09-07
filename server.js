@@ -1,4 +1,5 @@
-const express = require('express')
+const bodyParser = require('body-parser');
+const express = require('express');
 var graphqlHTTP = require('express-graphql');
 var { buildSchema } = require('graphql');
 const next = require('next')
@@ -38,7 +39,7 @@ app
     .then(() => {
         const server = express()
 
-        server.use('/graphql', graphqlHTTP({
+        server.use('/graphql', bodyParser.json(), graphqlHTTP({
             schema: schema,
             rootValue: root,
             graphiql: true,

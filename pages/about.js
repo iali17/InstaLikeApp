@@ -2,25 +2,19 @@ import Layout from '../components/MyLayout'
 import withData from '../lib/apollo';
 import { useQuery } from "@apollo/react-hooks";
 import { gql } from "apollo-boost";
-import { List, ListItem } from '@material-ui/core';
+import { List, ListItem, Button } from '@material-ui/core';
 
 const GET_RANDOM_NUM = gql `
-    {
-        rollDice(numDice: 2, numSides: 6)
+    query RollDice($dice: Int!, $sides: Int) {
+        rollDice(numDice: $dice, numSides: $sides)
     }
 `;
 
-// function poof(data){
-//     alert(data.rollDice);
-// }
-
 export default withData(props => {
-    // const { data } = useQuery(GET_RANDOM_NUM, {
-    //     variables: {numD:1, numS: 6 },
-    //     notifyOnNetworkStatusChange: true
-    // });
-
-    const {data} = useQuery(GET_RANDOM_NUM);
+    const {loading, error, data, fetchMore} = useQuery(GET_RANDOM_NUM, {
+        variables: {dice: 2, sides: 6},
+        notifyOnNetworkStatusChange: true
+    });
 
     if (data.rollDice) {
         return (
@@ -30,7 +24,11 @@ export default withData(props => {
                         <ListItem key={index}>{item}</ListItem>
                     </List>
                 ))}
+                <Button onClick={() => poof(data, fetchMore)}>
+                    {loading ? "Loading..." : "Roll some more!!"}
+                </Button>
             </div>
+            
         )
     }
 
@@ -40,3 +38,16 @@ export default withData(props => {
         </Layout>
     )
 });
+
+function poof(data, fetchMore){
+    return fetchMore({
+        updateQuery: (previousResult, { fetchMoreResult }) => {
+            if (!fetchMoreResult) {
+                return previousResult;
+            }
+            return Object.assign({}, previousResult, {
+               rollDice: [...previousResult.rollDice, ...fetchMoreResult.rollDice] 
+            });
+        }
+    });
+}
